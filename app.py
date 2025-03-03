@@ -94,6 +94,9 @@ DEFAULT_CONFIG = {
     ],
     "servants-of-freedom":[
       "便携式地狱火炸弹"
+    ],
+    "other":[
+        ""
     ]
   },
   "weapons": {
@@ -296,7 +299,7 @@ class LoadoutGenerator:
 
     def _validate_config(self, config: Dict):
         required = {
-            "strategems": ["patriotic-administration-center", "orbital-cannons", "hangar", "bridge", "engineering-bay", "robotics-workshop", "chemical-agents", "urban-lehends", "servants-of-freedom"],
+            "strategems": ["patriotic-administration-center", "orbital-cannons", "hangar", "bridge", "engineering-bay", "robotics-workshop", "chemical-agents", "urban-lehends", "servants-of-freedom", "other"],
             "weapons": ["primary", "secondary", "grenades"],
             "armors": [],
             "enhancements": []
@@ -407,7 +410,7 @@ class LoadoutApp(ttk.Window):
         # 内置更新源列表
         self.update_urls = [
             "https://ts.tyhh10.xyz:58092/hd2_config.json",
-            "https://raw.githubusercontent.com/TYHH100/HD2Random/refs/heads/master/hd2_config.json"
+            "https://raw.githubusercontent.com/TYHH100/HD2Random/master/hd2_config.json"
         ]
         self.current_url_index = 0
 
