@@ -406,7 +406,7 @@ class LoadoutApp(ttk.Window):
 
         # 内置更新源列表
         self.update_urls = [
-            "https://ts.tyhh10.xyz:58092/hd2_config.json"
+            "https://ts.tyhh10.xyz:58092/hd2_config.json",
             "https://raw.githubusercontent.com/TYHH100/HD2Random/refs/heads/master/hd2_config.json"
         ]
         self.current_url_index = 0
