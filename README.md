@@ -9,3 +9,6 @@ pip install -r requirements.txt
 ```
 pyinstaller -w -F --hidden-import ttkbootstrap -n "HD2随机装备配置" app.py
 ```
+
+# 图片
+![1](/images/QQ20250303-161835.png)
