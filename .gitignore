@@ -1,6 +1,7 @@
 1.py
 
 *.bak
+*.txt
 
 .venv
 build

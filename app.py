@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from typing import List, Dict
 from tkinter import messagebox
 
+CURRENT_VERSION = "1.0.0"
+
 DEFAULT_CONFIG = {
     "strategems": {
     "patriotic-administration-center": [
@@ -268,7 +270,7 @@ class LoadoutGenerator:
             self.config = new_config
             return True
         except Exception as e:
-            raise RuntimeError(f"配置更新失败: {str(e)}")
+            raise RuntimeError(f"配置更新失败 {str(e)}")
 
     def __init__(self):
         self.script_dir = Path(os.path.dirname(os.path.abspath(sys.argv[0])))
@@ -409,8 +411,8 @@ class LoadoutApp(ttk.Window):
 
         # 内置更新源列表
         self.update_urls = [
-            "https://ts.tyhh10.xyz:58092/hd2_config.json",
-            "https://raw.githubusercontent.com/TYHH100/HD2Random/master/hd2_config.json"
+            "https://raw.githubusercontent.com/TYHH100/HD2Random/master/hd2_config.json",
+            "https://ts.tyhh10.xyz:58092/hd2_config.json"
         ]
         self.current_url_index = 0
 
@@ -464,7 +466,7 @@ class LoadoutApp(ttk.Window):
     def _try_update_config(self):
         """尝试从多个源更新配置"""
         success = False
-        last_error = None
+        last_error = "未知错误"
         
         while self.current_url_index < len(self.update_urls):
             url = self.update_urls[self.current_url_index]
@@ -472,16 +474,22 @@ class LoadoutApp(ttk.Window):
                 if self.generator.update_config_from_url(url):
                     success = True
                     break
+            except requests.exceptions.RequestException as e:
+                last_error = f"网络错误 {str(e)}"
+            except json.JSONDecodeError as e:
+                last_error = f"配置文件格式错误 {str(e)}"
+            except ValueError as e:
+                last_error = f"配置验证失败 {str(e)}"
             except Exception as e:
-                last_error = str(e)
+                last_error = f"意外错误 {str(e)}"
+            finally:
                 self.current_url_index += 1  # 切换到下一个源
         
         if success:
             self.after(0, lambda: messagebox.showinfo("成功", "配置已更新"))
         else:
-            error_msg = f"所有更新源均不可用\n最后错误：{last_error}"
+            error_msg = f"所有更新源均不可用\n{last_error}"
             self.after(0, lambda: messagebox.showerror("更新失败", error_msg))
-        
         self.after(0, self._hide_loading)
 
     def _update_config(self, url: str):
