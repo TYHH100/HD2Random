@@ -1,0 +1,7 @@
+1.py
+
+*.bak
+
+.venv
+build
+dist
