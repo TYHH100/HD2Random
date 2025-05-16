@@ -11,224 +11,16 @@ from dataclasses import dataclass
 from typing import List, Dict
 from tkinter import messagebox
 
-CURRENT_VERSION = "1.0.0"
-
-DEFAULT_CONFIG = {
-    "strategems": {
-    "patriotic-administration-center": [
-      "机枪",
-      "盟友",
-      "重机枪",
-      "反器材步枪",
-      "消耗性反坦克武器",
-      "无后坐力步枪",
-      "火焰喷射器",
-      "机炮",
-      "空爆火箭弹发射器",
-      "突击兵",
-      "磁轨炮",
-      "飞矛",
-      "StA-X3 W.A.S.P.发射器"
-    ],
-    "orbital-cannons": [
-      "轨道空爆攻击",
-      "轨道激光炮",
-      "轨道炮攻击",
-      "轨道游走火力网",
-      "轨道加特林火力网",
-      "轨道凝固汽油弹火力网",
-      "轨道120MM高爆弹火力网",
-      "轨道380MM高爆弹火力网"
-    ],
-    "hangar": [
-      "“飞鹰”机枪扫射",
-      "“飞鹰”空袭",
-      "“飞鹰”集束炸弹",
-      "“飞鹰”凝固汽油弹空袭",
-      "“飞鹰”烟雾攻击",
-      "“飞鹰”110MM火箭巢",
-      "“飞鹰”500KG炸弹",
-      "喷射肯包",
-      "快速侦察载具"
-    ],
-    "bridge": [
-      "轨道精准攻击",
-      "轨道毒气攻击",
-      "轨道电磁冲击波攻击",
-      "轨道烟雾攻击",
-      "重机枪部署支架",
-      "防护罩生成中继器",
-      "特斯拉塔"
-    ],
-    "engineering-bay":[
-      "补给背包",
-      "榴弹发射器",
-      "激光大炮",
-      "“护卫犬”漫游车",
-      "防弹护盾肖包",
-      "电弧发射器",
-      "反坦克地雷",
-      "燃烧地雷",
-      "反步兵地雷",
-      "类星体加衣炮",
-      "防护罩生成包",
-      "毒气地雷"
-    ],
-    "robotics-workshop":[
-      "哨戒机枪",
-      "加特林哨戒炮",
-      "迫击哨戒炮",
-      "“护卫犬”",
-      "自动哨戒炮",
-      "火箭哨戒炮",
-      "电磁冲击波迫击哨戒炮",
-      "“爱国者”外骨骼装甲",
-      "“解放者”外骨骼装甲"
-    ],
-    "chemical-agents":[
-      "灭菌器",
-      "“护卫犬”腐息"
-    ],
-    "urban-lehends":[
-      "定向护盾",
-      "火焰喷射哨戒炮",
-      "反坦克炮台"
-    ],
-    "servants-of-freedom":[
-      "便携式地狱火炸弹"
-    ],
-    "other":[
-        ""
-    ]
-  },
-  "weapons": {
-    "primary": [
-      "AR-23解放者",
-      "AR-23P穿甲解放者",
-      "AR-23C震荡解放者",
-      "AR-61肉锤",
-      "AR-23A“解放者”卡宾枪",
-      "R-63勤勉",
-      "R-63CS反狙击“勤勉”",
-      "SMG-37防卫者",
-      "SMG-72暴击斗土",
-      "SMG-32训斤",
-      "SG-8制裁者",
-      "SG-8S重炮手",
-      "SG-8P等离子”制裁者”",
-      "SG-451野炊",
-      "SG-225破裂者",
-      "SG-225SP弥漫于祷告”破裂者”",
-      "SG-225IE高燃”破裂者”",
-      "SG-20止息",
-      "R-36爆裂铳",
-      "R-2124宪法"
-      "LAS-5C长柄镰",
-      "LAS-16镰刀",
-      "LAS-17双刃镰刀",
-      "PLAS-39加速步枪",
-      "PLAS-1焦土",
-      "PLAS-101净化者",
-      "ARC-12雷霆",
-      "FLAM-66火炬手",
-      "StA-11冲锋枪",
-      "StA-52突击步枪",
-      "BR-14审判者",
-      "CB-9爆燃弩",
-      "JAR-5主宰",
-      "MP-98骑士"
-    ],
-    "secondary": [
-      "P-2和平制造者",
-      "P-19救世主",
-      "P-4参议员",
-      "P-113裁决",
-      "P-72迅击",
-      "P-11治疗剂手枪",
-      "LAS-7匕首",
-      "PLAS-15忠诚者",
-      "GP-31榴弹手枪",
-      "GP-31最后通牒",
-      "CQC-19眩晕长矛",
-      "CQC-30眩晕短棍",
-      "CQC-5战斗短柄斧",
-      "SG-22游击兵"
-    ],
-    "grenades": [
-      "G-6破片手雷",
-      "G-12高爆弹",
-      "G-10燃烧弹",
-      "G-16冲击弹",
-      "G-23眩晕弹",
-      "G-3烟雾弹",
-      "G-123铝热弹",
-      "G-13燃烧冲击弹",
-      "G-4毒气榴弹",
-      "K-2飞刀"
-    ]
-  },
-  "enhancements": [
-    "生命力强化",
-    "耐力强化",
-    "肌肉强化",
-    "UAV侦察强化资源",
-    "提高増援预箅",
-    "灵活增援预算",
-    "绝地喧射舱空间优化",
-    "定位混淆",
-    "专业撤离飞行员",
-    "激励性冲击",
-    "试验性注射剂",
-    "火焰炸弹绝地喷射舱",
-    "死亡冲刺",
-    "武装重新补给舱"
-  ],
-  "armors": [
-    "工程包(轻甲)",
-    "强化(轻甲)",
-    "电路导管(轻甲)",
-    "伺服辅助(轻甲)",
-    "急救包(轻甲)",
-    "额外垫料(轻甲)",
-    "侦察(轻甲)",
-    "集成炸药(轻甲)",
-    "毫不畏缩(轻甲)",
-    "蓄势出击(轻甲)",
-    "易燃易爆(轻甲)",
-    "应变自如(轻甲)",
-    "高级过能力(轻甲)",
-    "健壮体格(轻甲)",
-    
-    "工程包(中甲)",
-    "强化(中甲)",
-    "电路导管(中甲)",
-    "伺服辅助(中甲)",
-    "急救包(中甲)",
-    "额外垫料(中甲)",
-    "侦察(中甲)",
-    "集成炸药(中甲)",
-    "毫不畏缩(中甲)",
-    "易燃易爆(中甲)",
-    "应变自如(中甲)",
-    "高级过能力(中甲)",
-    "健壮体格(中甲)",
-
-    "工程包(重甲)",
-    "强化(重甲)",
-    "伺服辅助(重甲)",
-    "急救包(重甲)",
-    "额外垫料(重甲)",
-    "蓄势出击(重甲)",
-    "易燃易爆(重甲)",
-    "高级过能力(重甲)",
-    "健壮体格(重甲)"
-  ]
-}
+UPDATE_URLS = [
+    "https://raw.githubusercontent.com/TYHH100/HD2Random/master/hd2rd_config.json",
+    "https://ts.tyhh10.xyz:58092/hd2rd_config.json"
+]
 
 @dataclass
 class Loadout:
     strategems: List[str]
     primary: str
+    primary_attachment: str
     secondary: str
     grenade: str
     armor: str
@@ -251,22 +43,98 @@ class ConfigManager:
         self.batch_size = 1
 
 class LoadoutGenerator:
-    # 在现有类中添加以下方法
+    def _load_or_create_config(self) -> Dict:
+        def get_version(cfg):
+            return cfg.get("version", "0.0.0")
+
+        # 如果本地没有配置文件，直接走原有流程
+        if not self.config_path.exists():
+            for url in UPDATE_URLS:
+                try:
+                    response = requests.get(url, timeout=10)
+                    response.raise_for_status()
+                    new_config = response.json()
+                    self._validate_config(new_config)
+                    with open(self.config_path, 'w', encoding='utf-8') as f:
+                        json.dump(new_config, f, ensure_ascii=False, indent=2)
+                    messagebox.showinfo("配置文件已获取", f"已从在线源获取配置文件：\n{self.config_path}")
+                    return new_config
+                except Exception as e:
+                    last_error = str(e)
+            messagebox.showwarning("配置文件获取失败", f"在线获取配置失败，将使用默认配置。\n错误信息：{last_error}\n配置文件位置：{self.config_path}")
+
+        # 本地有配置文件，检查版本号
+        try:
+            with open(self.config_path, "r", encoding="utf-8") as f:
+                local_config = json.load(f)
+                self._validate_config(local_config)
+        except (json.JSONDecodeError, PermissionError) as e:
+            raise RuntimeError(f"配置文件错误: {str(e)}")
+
+        local_version = get_version(local_config)
+        server_config = None
+        server_version = local_version
+
+        # 检查服务器版本
+        for url in UPDATE_URLS:
+            try:
+                response = requests.get(url, timeout=10)
+                response.raise_for_status()
+                remote_config = response.json()
+                self._validate_config(remote_config)
+                remote_version = get_version(remote_config)
+                # 如果内容完全一致，提示无需更新
+                if remote_config == local_config:
+                    messagebox.showinfo("配置检查", "本地配置已是最新，无需更新。")
+                    return local_config
+                # 只要有一个服务器版本更高就用它
+                if self._compare_version(remote_version, local_version) > 0:
+                    server_config = remote_config
+                    server_version = remote_version
+                    break
+            except Exception:
+                continue
+
+        if server_config:
+            with open(self.config_path, 'w', encoding='utf-8') as f:
+                json.dump(server_config, f, ensure_ascii=False, indent=2)
+            messagebox.showinfo("配置已更新", f"检测到新版本配置，已自动更新到 v{server_version}")
+            return server_config
+
+        return local_config
+
+    @staticmethod
+    def _compare_version(v1, v2):
+        """比较两个版本号字符串 v1 > v2 返回1，等于返回0，小于返回-1"""
+        def parse(v):
+            return [int(x) for x in v.split('.')]
+        a, b = parse(v1), parse(v2)
+        for i in range(max(len(a), len(b))):
+            ai = a[i] if i < len(a) else 0
+            bi = b[i] if i < len(b) else 0
+            if ai > bi:
+                return 1
+            elif ai < bi:
+                return -1
+        return 0
+
     def update_config_from_url(self, url: str):
         """从指定URL更新配置文件"""
         try:
             response = requests.get(url, timeout=10)
             response.raise_for_status()
-            
-            # 验证配置格式
             new_config = response.json()
             self._validate_config(new_config)
-            
+            # 检查内容是否完全一致
+            if os.path.exists(self.config_path):
+                with open(self.config_path, 'r', encoding='utf-8') as f:
+                    local_config = json.load(f)
+                if new_config == local_config:
+                    messagebox.showinfo("配置检查", "本地配置已是最新，无需更新。")
+                    return False
             # 保存新配置
             with open(self.config_path, 'w', encoding='utf-8') as f:
                 json.dump(new_config, f, ensure_ascii=False, indent=2)
-            
-            # 重新加载配置
             self.config = new_config
             return True
         except Exception as e:
@@ -274,36 +142,14 @@ class LoadoutGenerator:
 
     def __init__(self):
         self.script_dir = Path(os.path.dirname(os.path.abspath(sys.argv[0])))
-        self.config_path = self.script_dir / "hd2_config.json"
+        self.config_path = self.script_dir / "hd2rd_config.json"
         self.config = self._load_or_create_config()
-
-    def _load_or_create_config(self) -> Dict:
-        if not self.config_path.exists():
-            self._create_default_config()
-            messagebox.showinfo("配置文件已创建", f"默认配置文件已生成在：\n{self.config_path}\n请根据需要修改")
-
-        try:
-            with open(self.config_path, "r", encoding="utf-8") as f:
-                config = json.load(f)
-                self._validate_config(config)
-                return config
-        except (json.JSONDecodeError, PermissionError) as e:
-            raise RuntimeError(f"配置文件错误: {str(e)}")
-
-    def _create_default_config(self):
-        try:
-            with open(self.config_path, "w", encoding="utf-8") as f:
-                json.dump(DEFAULT_CONFIG, f, ensure_ascii=False, indent=2)
-        except PermissionError:
-            raise RuntimeError("无权限创建配置文件，请检查目录权限")
-        except Exception as e:
-            raise RuntimeError(f"创建配置文件失败: {str(e)}")
 
     def _validate_config(self, config: Dict):
         required = {
             "strategems": ["patriotic-administration-center", "orbital-cannons", "hangar", "bridge", "engineering-bay", "robotics-workshop", "chemical-agents", "urban-lehends", "servants-of-freedom", "other"],
             "weapons": ["primary", "secondary", "grenades"],
-            "armors": [],
+            "armors": ["light", "medium", "heavy"],
             "enhancements": []
         }
         for section, keys in required.items():
@@ -348,39 +194,55 @@ class LoadoutGenerator:
             raise ValueError("可用的战略配备不足，请减少排除项")
         strats = random.sample(available_strat, 4)
 
-        primary = self._random_choice(
-            self.config["weapons"]["primary"], 
-            excludes["weapons"],
-            "weapons"
-        )
+        # 主武器
+        primary_weapon_obj = random.choice([
+            w for w in self.config["weapons"]["primary"]
+            if w["name"] not in excludes["weapons"]
+        ])
+        primary = primary_weapon_obj["name"]
+        attachments_dict = primary_weapon_obj.get("attachments", {})
+        # 针对每个配件大类，分别随机一个
+        primary_attachment = []
+        for cat in ["准镜", "下挂", "枪囗", "弹匣"]:
+            options = attachments_dict.get(cat, [])
+            if options:
+                primary_attachment.append(f"{cat}:{random.choice(options)}")
+        primary_attachment_str = "，".join(primary_attachment) if primary_attachment else "无"
+
+        # 副武器
         secondary = self._random_choice(
-            self.config["weapons"]["secondary"], 
+            self.config["weapons"]["secondary"],
             excludes["weapons"],
             "weapons"
         )
         while primary == secondary:
             secondary = self._random_choice(
-                self.config["weapons"]["secondary"], 
+                self.config["weapons"]["secondary"],
                 excludes["weapons"],
                 "weapons"
             )
 
+        # 合并所有分组下的护甲
+        all_armors = [armor for group in self.config["armors"].values() for armor in group]
+        armor = self._random_choice(
+            all_armors,
+            excludes["armors"],
+            "armors"
+        )
+
         return Loadout(
             strategems=strats,
             primary=primary,
+            primary_attachment=primary_attachment_str,
             secondary=secondary,
             grenade=self._random_choice(
-                self.config["weapons"]["grenades"], 
+                self.config["weapons"]["grenades"],
                 excludes["weapons"],
                 "weapons"
             ),
-            armor=self._random_choice(
-                self.config["armors"], 
-                excludes["armors"],
-                "armors"
-            ),
+            armor=armor,  # 这里是具体护甲名
             enhancement=self._random_choice(
-                self.config["enhancements"], 
+                self.config["enhancements"],
                 excludes["enhancements"],
                 "enhancements"
             )
@@ -401,6 +263,7 @@ class LoadoutApp(ttk.Window):
         }
         self.batch_size_var = tk.IntVar(value=1)
         self.update_thread = None  # 用于后台更新
+        self.current_url_index = 0  # 初始化当前URL索引
         
         try:
             self.generator = LoadoutGenerator()
@@ -408,13 +271,6 @@ class LoadoutApp(ttk.Window):
         except Exception as e:
             messagebox.showerror("初始化失败", str(e))
             self.destroy()
-
-        # 内置更新源列表
-        self.update_urls = [
-            "https://raw.githubusercontent.com/TYHH100/HD2Random/master/hd2_config.json",
-            "https://ts.tyhh10.xyz:58092/hd2_config.json"
-        ]
-        self.current_url_index = 0
 
     def _create_ui(self):
         menu_bar = tk.Menu(self)
@@ -467,12 +323,12 @@ class LoadoutApp(ttk.Window):
         """尝试从多个源更新配置"""
         success = False
         last_error = "未知错误"
-        
-        while self.current_url_index < len(self.update_urls):
-            url = self.update_urls[self.current_url_index]
+        while self.current_url_index < len(UPDATE_URLS):
+            url = UPDATE_URLS[self.current_url_index]
             try:
                 if self.generator.update_config_from_url(url):
                     success = True
+                    break
                     break
             except requests.exceptions.RequestException as e:
                 last_error = f"网络错误 {str(e)}"
@@ -537,22 +393,19 @@ class LoadoutApp(ttk.Window):
         )
         
         weapon_tab = self._create_exclude_tab(
-            notebook,
-            "武器",
+            notebook, "武器",
             self.generator.config["weapons"]["primary"] +
             self.generator.config["weapons"]["secondary"] +
             self.generator.config["weapons"]["grenades"]
         )
         
         armor_tab = self._create_exclude_tab(
-            notebook,
-            "护甲",
-            self.generator.config["armors"]
+            notebook, "护甲",
+            [s for cat in self.generator.config["armors"].values() for s in cat]
         )
         
         enhance_tab = self._create_exclude_tab(
-            notebook,
-            "强化",
+            notebook, "强化",
             self.generator.config["enhancements"]
         )
 
@@ -631,18 +484,18 @@ class LoadoutApp(ttk.Window):
         try:
             if os.name == 'nt':
                 os.startfile(self.generator.config_path.parent)
-            else:
-                os.system(f'open "{self.generator.config_path.parent}"')
+            #else:
+            #    os.system(f'open "{self.generator.config_path.parent}"')
         except Exception as e:
             messagebox.showwarning("打开目录失败", f"无法打开文件目录：\n{str(e)}")
 
     def generate(self):
         try:
-            self.generator = LoadoutGenerator()
             self.config_manager.batch_size = self.batch_size_var.get()
             if not 1 <= self.config_manager.batch_size <= 10:
                 raise ValueError("生成次数需在1-10之间")
 
+            #self.result_text.config(state=tk.NORMAL)
             self.result_text.delete(1.0, tk.END)
             loadouts = self.generator.generate_batch(self.config_manager)
             
@@ -655,6 +508,7 @@ class LoadoutApp(ttk.Window):
                 output.extend(f"- {s}" for s in loadout.strategems)
                 output.append("\n[武器]")
                 output.append(f"主武器：{loadout.primary}")
+                output.append(f"主武器配件：{loadout.primary_attachment}")
                 output.append(f"副武器：{loadout.secondary}")
                 output.append(f"投掷物：{loadout.grenade}")
                 output.append("\n[盔甲被动]")

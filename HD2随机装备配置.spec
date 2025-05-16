@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['app.py'],
+    ['HD2Random.py'],
     pathex=[],
     binaries=[],
     datas=[],

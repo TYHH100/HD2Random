@@ -7,7 +7,7 @@ pip install -r requirements.txt
 
 装好之后打包即可.
 ```
-pyinstaller -w -F --hidden-import ttkbootstrap -n "HD2随机装备配置" app.py
+pyinstaller "HD2随机装备配置.spec"
 ```
 
 # 图片
