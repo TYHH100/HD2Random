@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-publish:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
@@ -31,7 +31,7 @@ jobs:
         with:
             name: HD2Random
             path: |
-                Build/HD2Random.exe   
+                Build/**/HD2Random.exe   
 
       - name: Upload Build File to Release
         uses: softprops/action-gh-release@v2
@@ -41,4 +41,4 @@ jobs:
           name: Releases ${{github.ref_name}}
           #draft: true
           #prerelease: false
-          files: Build/HD2Random.exe
+          files: Build/**/HD2Random.exe
