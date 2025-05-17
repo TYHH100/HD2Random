@@ -24,14 +24,14 @@ jobs:
           pip install -r requirements.txt
     
       - name: Build
-        run: pyinstaller "HD2Random.spec"
+        run: pyinstaller "HD2Random.spec" --distpath Build
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
             name: HD2Random
             path: |
-                HD2Random/dist/HD2Random.exe
+                Build/HD2Random.exe   
 
       - name: Upload Build File to Release
         uses: softprops/action-gh-release@v2
@@ -41,4 +41,4 @@ jobs:
           name: Releases ${{github.ref_name}}
           #draft: true
           #prerelease: false
-          files: HD2Random/dist/HD2Random.exe
+          files: Build/HD2Random.exe
