@@ -31,8 +31,7 @@ jobs:
         with:
             name: HD2Random
             path: |
-                dist/HD2Random.exe   
-                HD2Random.exe
+                HD2Random/dist/HD2Random.exe
 
       - name: Upload Build File to Release
         uses: softprops/action-gh-release@v2
@@ -42,4 +41,4 @@ jobs:
           name: Releases ${{github.ref_name}}
           #draft: true
           #prerelease: false
-          files: dist/HD2Random.exe
+          files: HD2Random/dist/HD2Random.exe
