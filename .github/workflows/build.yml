@@ -1,0 +1,37 @@
+name: App Build
+
+on:
+  push:
+    tags: 
+      - "v*"
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -r requirements.txt
+    
+      - name: Build
+        run: pyinstaller "HD2Random.spec"
+
+      - name: Upload Build File to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{github.ref_name}}
+          name: Releases ${{github.ref_name}}
+          draft: true
+          #prerelease: false
+          files: dist/HD2Random.exe

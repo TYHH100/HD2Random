@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='HD2随机装备配置',
+    name='HD2Random',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

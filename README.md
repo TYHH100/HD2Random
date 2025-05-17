@@ -7,7 +7,7 @@ pip install -r requirements.txt
 
 装好之后打包即可.
 ```
-pyinstaller "HD2随机装备配置.spec"
+pyinstaller "HD2Random.spec"
 ```
 
 # 图片

@@ -30,15 +30,12 @@ class ConfigManager:
     def __init__(self):
         self.excludes = {
             "strategems": [],
-            "weapons": [],
+            "primary": [],
+            "secondary": [],
+            "grenades": [],
             "armors": [],
-            "enhancements": []
-        }
-        self.max_excludes = {
-            "strategems": 10,
-            "weapons": 15,
-            "armors": 5,
-            "enhancements": 5
+            "enhancements": [],
+            "primary_attachments": {}
         }
         self.batch_size = 1
 
@@ -83,11 +80,9 @@ class LoadoutGenerator:
                 remote_config = response.json()
                 self._validate_config(remote_config)
                 remote_version = get_version(remote_config)
-                # 如果内容完全一致，提示无需更新
                 if remote_config == local_config:
                     messagebox.showinfo("配置检查", "本地配置已是最新，无需更新。")
                     return local_config
-                # 只要有一个服务器版本更高就用它
                 if self._compare_version(remote_version, local_version) > 0:
                     server_config = remote_config
                     server_version = remote_version
@@ -159,19 +154,29 @@ class LoadoutGenerator:
                 if key not in config[section]:
                     raise ValueError(f"{section} 缺少必要字段: {key}")
 
-    def generate_batch(self, config: ConfigManager) -> List[Loadout]:
+    def generate_batch(self, config: ConfigManager, avoid_duplicate=True) -> List[Loadout]:
         loadouts = []
         seen = set()
         
         for _ in range(config.batch_size):
+            retry = 0
             while True:
                 loadout = self._generate_single(config.excludes)
-                sig = f"{sorted(loadout.strategems)}{loadout.primary}{loadout.secondary}"
-                if sig not in seen:
+                sig = (
+                    f"{sorted(loadout.strategems)}"
+                    f"{loadout.primary}"
+                    f"{loadout.primary_attachment}"
+                    f"{loadout.secondary}"
+                    f"{loadout.grenade}"
+                    f"{loadout.armor}"
+                    f"{loadout.enhancement}"
+                )
+                if not avoid_duplicate or sig not in seen:
                     seen.add(sig)
                     loadouts.append(loadout)
                     break
-                if len(seen) > 100:
+                retry += 1
+                if retry > 100:
                     raise RuntimeError("无法生成足够独特的配置")
         return loadouts
 
@@ -197,11 +202,10 @@ class LoadoutGenerator:
         # 主武器
         primary_weapon_obj = random.choice([
             w for w in self.config["weapons"]["primary"]
-            if w["name"] not in excludes["weapons"]
+            if w["name"] not in excludes["primary"]
         ])
         primary = primary_weapon_obj["name"]
         attachments_dict = primary_weapon_obj.get("attachments", {})
-        # 针对每个配件大类，分别随机一个
         primary_attachment = []
         for cat in ["准镜", "下挂", "枪囗", "弹匣"]:
             options = attachments_dict.get(cat, [])
@@ -212,13 +216,13 @@ class LoadoutGenerator:
         # 副武器
         secondary = self._random_choice(
             self.config["weapons"]["secondary"],
-            excludes["weapons"],
+            excludes["secondary"],
             "weapons"
         )
         while primary == secondary:
             secondary = self._random_choice(
                 self.config["weapons"]["secondary"],
-                excludes["weapons"],
+                excludes["secondary"],
                 "weapons"
             )
 
@@ -237,7 +241,7 @@ class LoadoutGenerator:
             secondary=secondary,
             grenade=self._random_choice(
                 self.config["weapons"]["grenades"],
-                excludes["weapons"],
+                excludes["grenades"],
                 "weapons"
             ),
             armor=armor,  # 这里是具体护甲名
@@ -257,13 +261,16 @@ class LoadoutApp(ttk.Window):
         self.exclude_vars = {}
         self.CATEGORY_MAP = {
             "战略配备": "strategems",
-            "武器": "weapons",
+            "主武器": "primary",
+            "副武器": "secondary",
+            "投掷物": "grenades",
             "护甲": "armors",
             "强化": "enhancements"
         }
         self.batch_size_var = tk.IntVar(value=1)
-        self.update_thread = None  # 用于后台更新
-        self.current_url_index = 0  # 初始化当前URL索引
+        self.avoid_duplicate_var = tk.BooleanVar(value=True)  # 新增变量
+        self.update_thread = None
+        self.current_url_index = 0
         
         try:
             self.generator = LoadoutGenerator()
@@ -286,6 +293,14 @@ class LoadoutApp(ttk.Window):
 
         control_frame = ttk.Frame(main_frame)
         control_frame.pack(fill=tk.X, pady=10)
+
+        # 新增：避免重复组合勾选框
+        avoid_cb = ttk.Checkbutton(
+            control_frame,
+            text="避免重复组合",
+            variable=self.avoid_duplicate_var
+        )
+        avoid_cb.pack(side=tk.LEFT, padx=5)
 
         generate_button = ttk.Button(
             main_frame, 
@@ -385,32 +400,43 @@ class LoadoutApp(ttk.Window):
         self._build_settings_ui()
 
     def _build_settings_ui(self):
+        # 优先读取本地排除设置
+        excludes_path = Path(os.path.dirname(os.path.abspath(sys.argv[0]))) / "hd2rd_excludes.json"
+        if excludes_path.exists():
+            try:
+                with open(excludes_path, "r", encoding="utf-8") as f:
+                    self.config_manager.excludes = json.load(f)
+            except Exception:
+                pass  # 读取失败则忽略，继续用默认
+
         notebook = ttk.Notebook(self.settings_win)
         
         strat_tab = self._create_exclude_tab(
             notebook, "战略配备", 
             [s for cat in self.generator.config["strategems"].values() for s in cat]
         )
-        
-        weapon_tab = self._create_exclude_tab(
-            notebook, "武器",
-            self.generator.config["weapons"]["primary"] +
-            self.generator.config["weapons"]["secondary"] +
+        primary_tab = self._create_exclude_tab(
+            notebook, "主武器",
+            [w["name"] for w in self.generator.config["weapons"]["primary"]]
+        )
+        secondary_tab = self._create_exclude_tab(
+            notebook, "副武器",
+            self.generator.config["weapons"]["secondary"]
+        )
+        grenade_tab = self._create_exclude_tab(
+            notebook, "投掷物",
             self.generator.config["weapons"]["grenades"]
         )
-        
         armor_tab = self._create_exclude_tab(
             notebook, "护甲",
             [s for cat in self.generator.config["armors"].values() for s in cat]
         )
-        
         enhance_tab = self._create_exclude_tab(
             notebook, "强化",
             self.generator.config["enhancements"]
         )
 
         notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
         save_button = ttk.Button(
             self.settings_win, 
             text="保存设置", 
@@ -434,49 +460,132 @@ class LoadoutApp(ttk.Window):
         config_key = self.CATEGORY_MAP[title]
         self.exclude_vars[title] = {}
         for item in items:
-            var = tk.BooleanVar(value=item in self.config_manager.excludes[config_key])
+            var = tk.BooleanVar(value=item in self.config_manager.excludes.get(config_key, []))
+            frame = ttk.Frame(scroll_frame)
+            frame.pack(anchor="w", fill="x")
             cb = ttk.Checkbutton(
-                scroll_frame,
+                frame,
                 text=item,
                 variable=var,
             )
-            cb.pack(anchor="w")
+            cb.pack(side="left")
             self.exclude_vars[title][item] = var
+
+            # 主武器增加配件排除按钮
+            if title == "主武器":
+                btn = ttk.Button(
+                    frame,
+                    text="设置配件排除",
+                    command=lambda wname=item: self._show_attachment_exclude(wname)
+                )
+                btn.pack(side="left", padx=5)
         
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         return tab
 
+    def _show_attachment_exclude(self, weapon_name):
+        # 查找该武器的配件
+        weapon_obj = next(
+            (w for w in self.generator.config["weapons"]["primary"] if w["name"] == weapon_name),
+            None
+        )
+        if not weapon_obj:
+            messagebox.showerror("错误", f"未找到武器：{weapon_name}")
+            return
+
+        win = tk.Toplevel(self)
+        win.title(f"{weapon_name} 配件排除")
+        win.geometry("350x400")
+
+        # 读取已排除的配件
+        excludes = self.config_manager.excludes.get("primary_attachments", {})
+        if not isinstance(excludes, dict):
+            excludes = {}
+        selected = set(excludes.get(weapon_name, []))
+        self.attachment_vars = {}
+
+        row = 0
+        for cat, options in weapon_obj.get("attachments", {}).items():
+            ttk.Label(win, text=cat).grid(row=row, column=0, sticky="w", pady=2)
+            row += 1
+            for opt in options:
+                var = tk.BooleanVar(value=opt in selected)
+                cb = ttk.Checkbutton(win, text=opt, variable=var)
+                cb.grid(row=row, column=0, sticky="w", padx=20)
+                self.attachment_vars.setdefault(weapon_name, {})[f"{cat}:{opt}"] = var
+                row += 1
+
+        def save():
+            checked = []
+            for key, var in self.attachment_vars.get(weapon_name, {}).items():
+                if var.get():
+                    checked.append(key)
+            # 更新到 excludes
+            all_excludes = self.config_manager.excludes.get("primary_attachments", {})
+            all_excludes[weapon_name] = checked
+            self.config_manager.excludes["primary_attachments"] = all_excludes
+            win.destroy()
+
+        ttk.Button(win, text="保存", command=save).grid(row=row, column=0, pady=10)
+
     def _save_settings(self):
         try:
             new_excludes = {
                 "strategems": [k for k,v in self.exclude_vars["战略配备"].items() if v.get()],
-                "weapons": [k for k,v in self.exclude_vars["武器"].items() if v.get()],
+                "primary": [k for k,v in self.exclude_vars["主武器"].items() if v.get()],
+                "secondary": [k for k,v in self.exclude_vars["副武器"].items() if v.get()],
+                "grenades": [k for k,v in self.exclude_vars["投掷物"].items() if v.get()],
                 "armors": [k for k,v in self.exclude_vars["护甲"].items() if v.get()],
                 "enhancements": [k for k,v in self.exclude_vars["强化"].items() if v.get()]
             }
-            
+
             error_msgs = []
             category_names = {
                 "strategems": "战略配备",
-                "weapons": "武器",
+                "primary": "主武器",
+                "secondary": "副武器",
+                "grenades": "投掷物",
                 "armors": "护甲",
                 "enhancements": "强化"
             }
-            
+
+            # 你可以分别设置每类最大排除数
+            max_excludes = {
+                "strategems": 99,
+                "primary": 99,
+                "secondary": 99,
+                "grenades": 99,
+                "armors": 99,
+                "enhancements": 99
+            }
+
             for category in new_excludes:
-                max_allowed = self.config_manager.max_excludes[category]
+                max_allowed = max_excludes[category]
                 current_count = len(new_excludes[category])
                 if current_count > max_allowed:
                     error_msgs.append(
                         f"{category_names[category]}最多排除{max_allowed}个（当前：{current_count}）"
                     )
-            
+
             if error_msgs:
                 raise ValueError("\n".join(error_msgs))
-            
-            self.config_manager.excludes = new_excludes
-            messagebox.showinfo("成功", "排除设置已保存")
+
+            # 保留 primary_attachments 字段
+            self.config_manager.excludes.update({
+                "strategems": new_excludes["strategems"],
+                "primary": new_excludes["primary"],
+                "secondary": new_excludes["secondary"],
+                "grenades": new_excludes["grenades"],
+                "armors": new_excludes["armors"],
+                "enhancements": new_excludes["enhancements"]
+            })
+
+            excludes_path = Path(os.path.dirname(os.path.abspath(sys.argv[0]))) / "hd2rd_excludes.json"
+            with open(excludes_path, "w", encoding="utf-8") as f:
+                json.dump(self.config_manager.excludes, f, ensure_ascii=False, indent=2)
+
+            messagebox.showinfo("成功", f"排除设置已保存\n文件位置：{excludes_path}")
         except Exception as e:
             messagebox.showerror("保存错误", str(e))
 
@@ -495,9 +604,9 @@ class LoadoutApp(ttk.Window):
             if not 1 <= self.config_manager.batch_size <= 10:
                 raise ValueError("生成次数需在1-10之间")
 
-            #self.result_text.config(state=tk.NORMAL)
             self.result_text.delete(1.0, tk.END)
-            loadouts = self.generator.generate_batch(self.config_manager)
+            # 传递是否避免重复
+            loadouts = self.generator.generate_batch(self.config_manager, avoid_duplicate=self.avoid_duplicate_var.get())
             
             output = []
             separator = "\n" + "═"*60 + "\n"

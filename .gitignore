@@ -4,3 +4,4 @@
 .venv
 build
 dist
+hd2rd_excludes.json
