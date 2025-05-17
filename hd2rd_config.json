@@ -1,5 +1,5 @@
 {
-  "version": "1.0.5",
+  "version": "1.0.6",
   "strategems": {
     "patriotic-administration-center": [
       "MG-43机枪",
@@ -333,7 +333,7 @@
       {
         "name": "R-6鹰眼",
         "attachments": {
-          "准镜": ["待补充"]
+          "准镜": ["4倍战斗瞄准镜", "反射式瞄准镜", "全息瞄准镜", "反射式瞄准镜MK2", "机械瞄具", "10倍狙击瞄准镜"]
         }
       },
       {
